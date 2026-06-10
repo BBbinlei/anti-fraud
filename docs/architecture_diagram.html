@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>金融反诈剧场 · 完整架构图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #060d1a; display: flex; justify-content: center; padding: 20px 10px; }
+  svg { max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<svg width="1500" height="950" viewBox="0 0 1500 950"
+     xmlns="http://www.w3.org/2000/svg"
+     style="font-family:'PingFang SC','Microsoft YaHei','Hiragino Sans GB',sans-serif;">
+
+<defs>
+  <!-- 点阵背景 -->
+  <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="0.9" fill="rgba(80,160,220,0.07)"/>
+  </pattern>
+
+  <!-- 箭头：主流程（白色） -->
+  <marker id="arr" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <polygon points="0 0,9 3.5,0 7" fill="rgba(255,255,255,0.45)"/>
+  </marker>
+  <!-- 箭头：可观测性连接（橙色） -->
+  <marker id="arr-obs" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <polygon points="0 0,9 3.5,0 7" fill="#f97316"/>
+  </marker>
+  <!-- 箭头：评估连接（红色） -->
+  <marker id="arr-eval" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <polygon points="0 0,9 3.5,0 7" fill="#ef4444"/>
+  </marker>
+
+  <!-- 渐变：各层背景 -->
+  <linearGradient id="g-user" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#0e7490" stop-opacity="0.85"/>
+    <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.35"/>
+  </linearGradient>
+  <linearGradient id="g-front" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#1e40af" stop-opacity="0.75"/>
+    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.25"/>
+  </linearGradient>
+  <linearGradient id="g-back" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#b45309" stop-opacity="0.75"/>
+    <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.25"/>
+  </linearGradient>
+  <linearGradient id="g-ai" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#6d28d9" stop-opacity="0.75"/>
+    <stop offset="100%" stop-color="#a855f7" stop-opacity="0.25"/>
+  </linearGradient>
+  <linearGradient id="g-data" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#065f46" stop-opacity="0.80"/>
+    <stop offset="100%" stop-color="#10b981" stop-opacity="0.28"/>
+  </linearGradient>
+  <linearGradient id="g-obs" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#7c2d12" stop-opacity="0.55"/>
+    <stop offset="100%" stop-color="#f97316" stop-opacity="0.12"/>
+  </linearGradient>
+  <linearGradient id="g-ev" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#7f1d1d" stop-opacity="0.50"/>
+    <stop offset="100%" stop-color="#ef4444" stop-opacity="0.10"/>
+  </linearGradient>
+</defs>
+
+<!-- ════ 背景 ════ -->
+<rect width="1500" height="950" fill="#060d1a"/>
+<rect width="1500" height="950" fill="url(#dots)"/>
+
+<!-- ════ 标题栏 ════ -->
+<rect x="18" y="10" width="1464" height="44" rx="6"
+      fill="rgba(0,223,255,0.04)" stroke="rgba(0,223,255,0.18)" stroke-width="1"/>
+<text x="750" y="37" text-anchor="middle"
+      fill="#e2ecf6" font-size="16" font-weight="700" letter-spacing="2">
+  金融反诈剧场 · 完整项目架构图（含可观测性 &amp; 评估系统）
+</text>
+
+<!-- ════ 纵向分隔线 ════ -->
+<line x1="876" y1="63" x2="876" y2="910"
+      stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="6,5"/>
+
+<!-- ══════════════════════════════════════════════════
+     主系统流程（左列  x:85~775  center:430）
+══════════════════════════════════════════════════ -->
+
+<!-- ── 1. 用户层 ── -->
+<rect x="295" y="66" width="270" height="48" rx="24"
+      fill="url(#g-user)" stroke="#22d3ee" stroke-width="1.8"/>
+<text x="430" y="95" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="600">
+  👥  用户 / 学生群体
+</text>
+
+<!-- 箭头 User→Frontend -->
+<line x1="430" y1="114" x2="430" y2="152"
+      stroke="rgba(255,255,255,0.38)" stroke-width="1.5" marker-end="url(#arr)"/>
+<text x="448" y="137" fill="rgba(255,255,255,0.28)" font-size="9" letter-spacing="1">HTTP</text>
+
+<!-- ── 2. 前端层 ── -->
+<rect x="85" y="155" width="690" height="91" rx="8"
+      fill="url(#g-front)" stroke="#3b82f6" stroke-width="1.6"/>
+<text x="108" y="175" fill="#93c5fd" font-size="10" font-weight="700" letter-spacing="2">FRONTEND</text>
+<text x="430" y="175" text-anchor="middle" fill="#bfdbfe" font-size="14" font-weight="700">
+  前端 Web / 小程序界面
+</text>
+
+<!-- 5 页面标签  gap=18  width=118  start x=100 -->
+<rect x="100" y="189" width="118" height="27" rx="4"
+      fill="rgba(59,130,246,0.28)" stroke="rgba(59,130,246,0.55)" stroke-width="1"/>
+<text x="159" y="207" text-anchor="middle" fill="#bfdbfe" font-size="11">🎭 剧场互动页</text>
+
+<rect x="236" y="189" width="118" height="27" rx="4"
+      fill="rgba(59,130,246,0.28)" stroke="rgba(59,130,246,0.55)" stroke-width="1"/>
+<text x="295" y="207" text-anchor="middle" fill="#bfdbfe" font-size="11">📈 学习成长页</text>
+
+<rect x="372" y="189" width="118" height="27" rx="4"
+      fill="rgba(59,130,246,0.28)" stroke="rgba(59,130,246,0.55)" stroke-width="1"/>
+<text x="431" y="207" text-anchor="middle" fill="#bfdbfe" font-size="11">📢 举报入口页</text>
+
+<rect x="508" y="189" width="118" height="27" rx="4"
+      fill="rgba(59,130,246,0.28)" stroke="rgba(59,130,246,0.55)" stroke-width="1"/>
+<text x="567" y="207" text-anchor="middle" fill="#bfdbfe" font-size="11">📋 复盘报告页</text>
+
+<rect x="644" y="189" width="118" height="27" rx="4"
+      fill="rgba(59,130,246,0.28)" stroke="rgba(59,130,246,0.55)" stroke-width="1"/>
+<text x="703" y="207" text-anchor="middle" fill="#bfdbfe" font-size="11">⚙️ 剧场配置页</text>
+
+<!-- 箭头 Frontend→Backend -->
+<line x1="430" y1="246" x2="430" y2="286"
+      stroke="rgba(255,255,255,0.38)" stroke-width="1.5" marker-end="url(#arr)"/>
+<text x="450" y="270" fill="rgba(255,255,255,0.28)" font-size="9" letter-spacing="1">REST API</text>
+
+<!-- ── 3. 后端层 (FastAPI) ── -->
+<rect x="85" y="289" width="690" height="152" rx="8"
+      fill="url(#g-back)" stroke="#f59e0b" stroke-width="1.6"/>
+<text x="108" y="309" fill="#fcd34d" font-size="10" font-weight="700" letter-spacing="2">BACKEND</text>
+<text x="430" y="309" text-anchor="middle" fill="#fde68a" font-size="14" font-weight="700">
+  FastAPI 后端服务
+</text>
+
+<!-- 模块行1  4 tags  gap=16  width=155  start x=100 -->
+<rect x="100" y="319" width="155" height="27" rx="4"
+      fill="rgba(245,158,11,0.22)" stroke="rgba(245,158,11,0.52)" stroke-width="1"/>
+<text x="177" y="337" text-anchor="middle" fill="#fde68a" font-size="11">🎭 剧场创建模块</text>
+
+<rect x="271" y="319" width="155" height="27" rx="4"
+      fill="rgba(245,158,11,0.22)" stroke="rgba(245,158,11,0.52)" stroke-width="1"/>
+<text x="348" y="337" text-anchor="middle" fill="#fde68a" font-size="11">🚨 风险评分模块</text>
+
+<rect x="442" y="319" width="155" height="27" rx="4"
+      fill="rgba(245,158,11,0.22)" stroke="rgba(245,158,11,0.52)" stroke-width="1"/>
+<text x="519" y="337" text-anchor="middle" fill="#fde68a" font-size="11">🛡️ 劝阻推进模块</text>
+
+<rect x="613" y="319" width="155" height="27" rx="4"
+      fill="rgba(245,158,11,0.22)" stroke="rgba(245,158,11,0.52)" stroke-width="1"/>
+<text x="690" y="337" text-anchor="middle" fill="#fde68a" font-size="11">🤖 AI 生成模块</text>
+
+<!-- 模块行2 -->
+<rect x="100" y="358" width="155" height="27" rx="4"
+      fill="rgba(245,158,11,0.22)" stroke="rgba(245,158,11,0.52)" stroke-width="1"/>
+<text x="177" y="376" text-anchor="middle" fill="#fde68a" font-size="11">📋 复盘报告模块</text>
+
+<rect x="271" y="358" width="155" height="27" rx="4"
+      fill="rgba(245,158,11,0.22)" stroke="rgba(245,158,11,0.52)" stroke-width="1"/>
+<text x="348" y="376" text-anchor="middle" fill="#fde68a" font-size="11">🏆 游戏化成长模块</text>
+
+<rect x="442" y="358" width="155" height="27" rx="4"
+      fill="rgba(245,158,11,0.22)" stroke="rgba(245,158,11,0.52)" stroke-width="1"/>
+<text x="519" y="376" text-anchor="middle" fill="#fde68a" font-size="11">📢 举报处理模块</text>
+
+<rect x="613" y="358" width="155" height="27" rx="4"
+      fill="rgba(245,158,11,0.22)" stroke="rgba(245,158,11,0.52)" stroke-width="1"/>
+<text x="690" y="376" text-anchor="middle" fill="#fde68a" font-size="11">🔒 安全防敏模块</text>
+
+<!-- 文件路径注释 -->
+<text x="430" y="424" text-anchor="middle"
+      fill="rgba(253,230,138,0.38)" font-size="10">
+  routers/theater.py · routers/report.py · services/rule_engine.py · main.py
+</text>
+
+<!-- 箭头 Backend→AI -->
+<line x1="430" y1="441" x2="430" y2="476"
+      stroke="rgba(255,255,255,0.38)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+<!-- ── 4. AI / RAG 层 ── -->
+<rect x="85" y="479" width="690" height="114" rx="8"
+      fill="url(#g-ai)" stroke="#a855f7" stroke-width="1.6"/>
+<text x="108" y="499" fill="#d8b4fe" font-size="10" font-weight="700" letter-spacing="2">AI / RAG</text>
+<text x="430" y="499" text-anchor="middle" fill="#e9d5ff" font-size="14" font-weight="700">
+  AI / RAG 核心层
+</text>
+
+<!-- 4 组件  gap=16  width=155  start x=100 -->
+<rect x="100" y="510" width="155" height="44" rx="5"
+      fill="rgba(168,85,247,0.28)" stroke="rgba(168,85,247,0.60)" stroke-width="1"/>
+<text x="177" y="528" text-anchor="middle" fill="#e9d5ff" font-size="11" font-weight="600">规则引擎</text>
+<text x="177" y="545" text-anchor="middle" fill="rgba(233,213,255,0.55)" font-size="9">risk_rules.json 匹配</text>
+
+<rect x="271" y="510" width="155" height="44" rx="5"
+      fill="rgba(168,85,247,0.28)" stroke="rgba(168,85,247,0.60)" stroke-width="1"/>
+<text x="348" y="528" text-anchor="middle" fill="#e9d5ff" font-size="11" font-weight="600">Embedding 模型</text>
+<text x="348" y="545" text-anchor="middle" fill="rgba(233,213,255,0.55)" font-size="9">bge-small-zh-v1.5</text>
+
+<rect x="442" y="510" width="155" height="44" rx="5"
+      fill="rgba(168,85,247,0.28)" stroke="rgba(168,85,247,0.60)" stroke-width="1"/>
+<text x="519" y="528" text-anchor="middle" fill="#e9d5ff" font-size="11" font-weight="600">Chroma 向量检索</text>
+<text x="519" y="545" text-anchor="middle" fill="rgba(233,213,255,0.55)" font-size="9">余弦相似度搜索</text>
+
+<rect x="613" y="510" width="155" height="44" rx="5"
+      fill="rgba(168,85,247,0.28)" stroke="rgba(168,85,247,0.60)" stroke-width="1"/>
+<text x="690" y="528" text-anchor="middle" fill="#e9d5ff" font-size="11" font-weight="600">LLM API</text>
+<text x="690" y="545" text-anchor="middle" fill="rgba(233,213,255,0.55)" font-size="9">Claude / DeepSeek</text>
+
+<text x="430" y="578" text-anchor="middle"
+      fill="rgba(233,213,255,0.35)" font-size="10">
+  services/ai_service.py · services/rag.py · build_vectorstore.py
+</text>
+
+<!-- 箭头 AI→Data -->
+<line x1="430" y1="593" x2="430" y2="630"
+      stroke="rgba(255,255,255,0.38)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+<!-- ── 5. 数据层 ── -->
+<rect x="85" y="633" width="690" height="110" rx="8"
+      fill="url(#g-data)" stroke="#10b981" stroke-width="1.6"/>
+<text x="108" y="653" fill="#6ee7b7" font-size="10" font-weight="700" letter-spacing="2">DATA</text>
+<text x="430" y="653" text-anchor="middle" fill="#a7f3d0" font-size="14" font-weight="700">
+  数据层
+</text>
+
+<!-- 5 数据存储  gap=18  width=118  start x=100 -->
+<rect x="100" y="663" width="118" height="42" rx="5"
+      fill="rgba(16,185,129,0.22)" stroke="rgba(16,185,129,0.52)" stroke-width="1"/>
+<text x="159" y="681" text-anchor="middle" fill="#a7f3d0" font-size="10" font-weight="600">骗局知识库</text>
+<text x="159" y="697" text-anchor="middle" fill="rgba(167,243,208,0.55)" font-size="9">scam_cards.json</text>
+
+<rect x="236" y="663" width="118" height="42" rx="5"
+      fill="rgba(16,185,129,0.22)" stroke="rgba(16,185,129,0.52)" stroke-width="1"/>
+<text x="295" y="681" text-anchor="middle" fill="#a7f3d0" font-size="10" font-weight="600">话术模板库</text>
+<text x="295" y="697" text-anchor="middle" fill="rgba(167,243,208,0.55)" font-size="9">script_templates.json</text>
+
+<rect x="372" y="663" width="118" height="42" rx="5"
+      fill="rgba(16,185,129,0.22)" stroke="rgba(16,185,129,0.52)" stroke-width="1"/>
+<text x="431" y="681" text-anchor="middle" fill="#a7f3d0" font-size="10" font-weight="600">风险规则库</text>
+<text x="431" y="697" text-anchor="middle" fill="rgba(167,243,208,0.55)" font-size="9">risk_rules.json</text>
+
+<rect x="508" y="663" width="118" height="42" rx="5"
+      fill="rgba(16,185,129,0.22)" stroke="rgba(16,185,129,0.52)" stroke-width="1"/>
+<text x="567" y="681" text-anchor="middle" fill="#a7f3d0" font-size="10" font-weight="600">Chroma 向量库</text>
+<text x="567" y="697" text-anchor="middle" fill="rgba(167,243,208,0.55)" font-size="9">./chroma_db/</text>
+
+<rect x="644" y="663" width="118" height="42" rx="5"
+      fill="rgba(16,185,129,0.22)" stroke="rgba(16,185,129,0.52)" stroke-width="1"/>
+<text x="703" y="681" text-anchor="middle" fill="#a7f3d0" font-size="10" font-weight="600">SQLite 数据库</text>
+<text x="703" y="697" text-anchor="middle" fill="rgba(167,243,208,0.55)" font-size="9">metrics.db · app.db</text>
+
+<text x="430" y="728" text-anchor="middle"
+      fill="rgba(167,243,208,0.32)" font-size="10">
+  data/ · eval_dataset.json · review_cards.json
+</text>
+
+<!-- ── 图例 ── -->
+<rect x="85" y="772" width="690" height="56" rx="6"
+      fill="rgba(255,255,255,0.015)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+<text x="430" y="789" text-anchor="middle" fill="rgba(255,255,255,0.22)" font-size="9" letter-spacing="3">LEGEND</text>
+
+<!-- 图例色块 -->
+<rect x="108" y="798" width="11" height="11" rx="2" fill="rgba(14,116,144,0.7)" stroke="#22d3ee" stroke-width="1"/>
+<text x="124" y="808" fill="rgba(255,255,255,0.45)" font-size="10">用户层</text>
+
+<rect x="190" y="798" width="11" height="11" rx="2" fill="rgba(30,64,175,0.7)" stroke="#3b82f6" stroke-width="1"/>
+<text x="206" y="808" fill="rgba(255,255,255,0.45)" font-size="10">前端层</text>
+
+<rect x="272" y="798" width="11" height="11" rx="2" fill="rgba(180,83,9,0.7)" stroke="#f59e0b" stroke-width="1"/>
+<text x="288" y="808" fill="rgba(255,255,255,0.45)" font-size="10">后端层</text>
+
+<rect x="354" y="798" width="11" height="11" rx="2" fill="rgba(109,40,217,0.7)" stroke="#a855f7" stroke-width="1"/>
+<text x="370" y="808" fill="rgba(255,255,255,0.45)" font-size="10">AI/RAG 层</text>
+
+<rect x="452" y="798" width="11" height="11" rx="2" fill="rgba(6,95,70,0.7)" stroke="#10b981" stroke-width="1"/>
+<text x="468" y="808" fill="rgba(255,255,255,0.45)" font-size="10">数据层</text>
+
+<rect x="540" y="798" width="11" height="11" rx="2" fill="rgba(194,65,12,0.7)" stroke="#f97316" stroke-width="1"/>
+<text x="556" y="808" fill="rgba(255,255,255,0.45)" font-size="10">可观测性</text>
+
+<rect x="634" y="798" width="11" height="11" rx="2" fill="rgba(127,29,29,0.7)" stroke="#ef4444" stroke-width="1"/>
+<text x="650" y="808" fill="rgba(255,255,255,0.45)" font-size="10">评估系统</text>
+
+<!-- 箭头说明 -->
+<line x1="112" y1="822" x2="136" y2="822" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" marker-end="url(#arr)"/>
+<text x="141" y="826" fill="rgba(255,255,255,0.35)" font-size="9">主数据流</text>
+
+<line x1="230" y1="822" x2="254" y2="822" stroke="#f97316" stroke-width="1.3" stroke-dasharray="4,3" marker-end="url(#arr-obs)"/>
+<text x="259" y="826" fill="rgba(255,255,255,0.35)" font-size="9">观测采集</text>
+
+<line x1="358" y1="822" x2="382" y2="822" stroke="#ef4444" stroke-width="1.3" stroke-dasharray="4,3" marker-end="url(#arr-eval)"/>
+<text x="387" y="826" fill="rgba(255,255,255,0.35)" font-size="9">评估输入</text>
+
+
+<!-- ══════════════════════════════════════════════════
+     右列：可观测性 & 评估系统  x:885~1455
+══════════════════════════════════════════════════ -->
+
+<!-- 外层容器 -->
+<rect x="884" y="63" width="572" height="718" rx="10"
+      fill="rgba(249,115,22,0.025)" stroke="rgba(249,115,22,0.22)" stroke-width="1.5" stroke-dasharray="8,5"/>
+
+<!-- 大标题 -->
+<text x="1170" y="86" text-anchor="middle"
+      fill="#fb923c" font-size="13" font-weight="700" letter-spacing="3">
+  可观测性 &amp; 评估系统
+</text>
+<line x1="900" y1="95" x2="1440" y2="95" stroke="rgba(249,115,22,0.18)" stroke-width="1"/>
+
+<!-- ══ A. 日志 & 性能追踪区 ══ -->
+
+<!-- RAGLogger -->
+<rect x="900" y="105" width="258" height="165" rx="7"
+      fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.48)" stroke-width="1.3"/>
+<text x="1029" y="125" text-anchor="middle" fill="#fed7aa" font-size="12" font-weight="700">
+  📋 RAGLogger
+</text>
+<text x="1029" y="141" text-anchor="middle"
+      fill="rgba(253,186,116,0.65)" font-size="9">services/rag_logger.py</text>
+
+<text x="916" y="160" fill="#fed7aa" font-size="10">·  query()       — 记录原始查询</text>
+<text x="916" y="176" fill="#fed7aa" font-size="10">·  retrieval()   — 文档 + 相似度分</text>
+<text x="916" y="192" fill="#fed7aa" font-size="10">·  generation() — Token + 延迟</text>
+<text x="916" y="208" fill="#fed7aa" font-size="10">·  risk()         — 命中规则 + 关键词</text>
+<text x="916" y="224" fill="#fed7aa" font-size="10">·  complete()   — 完整调用链 trace</text>
+
+<rect x="910" y="233" width="237" height="27" rx="4"
+      fill="rgba(249,115,22,0.18)" stroke="rgba(249,115,22,0.40)" stroke-width="1"/>
+<text x="1028" y="251" text-anchor="middle" fill="#ffedd5" font-size="10">
+  ➜  logs/rag_YYYY-MM-DD.log  (JSON)
+</text>
+
+<!-- PerformanceTracker -->
+<rect x="1182" y="105" width="258" height="165" rx="7"
+      fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.48)" stroke-width="1.3"/>
+<text x="1311" y="125" text-anchor="middle" fill="#fed7aa" font-size="12" font-weight="700">
+  ⏱️ PerformanceTracker
+</text>
+<text x="1311" y="141" text-anchor="middle"
+      fill="rgba(253,186,116,0.65)" font-size="9">services/performance_tracker.py</text>
+
+<text x="1198" y="160" fill="#fed7aa" font-size="10">·  start / end      — 组件级计时</text>
+<text x="1198" y="176" fill="#fed7aa" font-size="10">·  with track("llm")  — 上下文管理</text>
+<text x="1198" y="192" fill="#fed7aa" font-size="10">·  record_tokens()  — 消耗统计</text>
+<text x="1198" y="208" fill="#fed7aa" font-size="10">·  record_risk()     — 风险等级</text>
+<text x="1198" y="224" fill="#fed7aa" font-size="10">·  save()             — 写入数据库</text>
+
+<rect x="1192" y="233" width="237" height="27" rx="4"
+      fill="rgba(249,115,22,0.18)" stroke="rgba(249,115,22,0.40)" stroke-width="1"/>
+<text x="1310" y="251" text-anchor="middle" fill="#ffedd5" font-size="10">
+  ➜  metrics.db  (request_metrics 表)
+</text>
+
+<!-- 分隔线 + 评估系统标题 -->
+<line x1="900" y1="285" x2="1440" y2="285" stroke="rgba(239,68,68,0.20)" stroke-width="1"/>
+<text x="1170" y="303" text-anchor="middle" fill="#f87171" font-size="12" font-weight="700" letter-spacing="2">
+  评估系统  /  RAGEvaluator
+</text>
+<text x="1170" y="318" text-anchor="middle" fill="rgba(248,113,113,0.55)" font-size="9">
+  services/rag_evaluator.py · data/eval_dataset.json
+</text>
+
+<!-- ══ B. 三列评估框 ══ -->
+
+<!-- 检索质量评估 -->
+<rect x="900" y="327" width="167" height="150" rx="6"
+      fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.45)" stroke-width="1.2"/>
+<text x="983" y="347" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="700">
+  🔍 检索质量评估
+</text>
+<text x="983" y="362" text-anchor="middle" fill="rgba(252,165,165,0.55)" font-size="9">
+  evaluate_retrieval()
+</text>
+
+<text x="913" y="381" fill="#fca5a5" font-size="10">Hit Rate@1</text>
+<text x="1059" y="381" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">正确首位命中率</text>
+<text x="913" y="397" fill="#fca5a5" font-size="10">Hit Rate@3</text>
+<text x="1059" y="397" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">前3位命中率</text>
+<text x="913" y="413" fill="#fca5a5" font-size="10">MRR</text>
+<text x="1059" y="413" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">平均倒数排名</text>
+<text x="913" y="429" fill="#fca5a5" font-size="10">Avg Similarity</text>
+<text x="1059" y="429" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">余弦相似度均值</text>
+<text x="913" y="445" fill="#fca5a5" font-size="10">Latency</text>
+<text x="1059" y="445" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">检索耗时 ms</text>
+
+<rect x="910" y="457" width="148" height="13" rx="3"
+      fill="rgba(239,68,68,0.14)" stroke="rgba(239,68,68,0.28)" stroke-width="0.8"/>
+<text x="984" y="467" text-anchor="middle" fill="rgba(252,165,165,0.45)" font-size="8">
+  输入: retrieval_cases
+</text>
+
+<!-- 风险检测评估 -->
+<rect x="1083" y="327" width="167" height="150" rx="6"
+      fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.45)" stroke-width="1.2"/>
+<text x="1166" y="347" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="700">
+  🚨 风险检测评估
+</text>
+<text x="1166" y="362" text-anchor="middle" fill="rgba(252,165,165,0.55)" font-size="9">
+  evaluate_risk_detection()
+</text>
+
+<text x="1096" y="381" fill="#fca5a5" font-size="10">Accuracy</text>
+<text x="1242" y="381" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">总体准确率</text>
+<text x="1096" y="397" fill="#fca5a5" font-size="10">Precision</text>
+<text x="1242" y="397" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">精确率</text>
+<text x="1096" y="413" fill="#fca5a5" font-size="10">Recall</text>
+<text x="1242" y="413" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">召回率</text>
+<text x="1096" y="429" fill="#fca5a5" font-size="10">F1 Score</text>
+<text x="1242" y="429" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">综合评分</text>
+<text x="1096" y="445" fill="#fca5a5" font-size="10">FPR / FNR</text>
+<text x="1242" y="445" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">误报 / 漏报率</text>
+
+<rect x="1093" y="457" width="148" height="13" rx="3"
+      fill="rgba(239,68,68,0.14)" stroke="rgba(239,68,68,0.28)" stroke-width="0.8"/>
+<text x="1167" y="467" text-anchor="middle" fill="rgba(252,165,165,0.45)" font-size="8">
+  输入: risk_cases
+</text>
+
+<!-- 生成质量评估 (RAGAS) -->
+<rect x="1266" y="327" width="167" height="150" rx="6"
+      fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.45)" stroke-width="1.2"/>
+<text x="1349" y="347" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="700">
+  ✍️ 生成质量评估
+</text>
+<text x="1349" y="362" text-anchor="middle" fill="rgba(252,165,165,0.55)" font-size="9">
+  RAGAS / 轻量代理指标
+</text>
+
+<text x="1279" y="381" fill="#fca5a5" font-size="10">Faithfulness</text>
+<text x="1425" y="381" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">答案忠实于上下文</text>
+<text x="1279" y="397" fill="#fca5a5" font-size="10">Answer Relevancy</text>
+<text x="1425" y="397" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">答案相关性</text>
+<text x="1279" y="413" fill="#fca5a5" font-size="10">Context Precision</text>
+<text x="1425" y="413" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">上下文精度</text>
+<text x="1279" y="429" fill="#fca5a5" font-size="10">Context Recall</text>
+<text x="1425" y="429" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">上下文覆盖率</text>
+<text x="1279" y="445" fill="#fca5a5" font-size="10">Keyword Overlap</text>
+<text x="1425" y="445" text-anchor="end" fill="rgba(252,165,165,0.60)" font-size="9">关键词覆盖（代理）</text>
+
+<rect x="1276" y="457" width="148" height="13" rx="3"
+      fill="rgba(239,68,68,0.14)" stroke="rgba(239,68,68,0.28)" stroke-width="0.8"/>
+<text x="1350" y="467" text-anchor="middle" fill="rgba(252,165,165,0.45)" font-size="8">
+  输入: generation_cases
+</text>
+
+<!-- ══ C. 评估输出 ══ -->
+<line x1="900" y1="492" x2="1440" y2="492" stroke="rgba(249,115,22,0.14)" stroke-width="1"/>
+
+<rect x="900" y="500" width="540" height="82" rx="6"
+      fill="rgba(249,115,22,0.07)" stroke="rgba(249,115,22,0.32)" stroke-width="1.2"/>
+<text x="1170" y="519" text-anchor="middle" fill="#fed7aa" font-size="11" font-weight="700">
+  📤 评估输出
+</text>
+
+<rect x="910" y="527" width="248" height="42" rx="4"
+      fill="rgba(249,115,22,0.13)" stroke="rgba(249,115,22,0.38)" stroke-width="1"/>
+<text x="1034" y="544" text-anchor="middle" fill="#ffedd5" font-size="10" font-weight="600">
+  eval_report_*.json
+</text>
+<text x="1034" y="560" text-anchor="middle" fill="rgba(255,237,213,0.55)" font-size="9">
+  完整评估报告（含所有量化指标）
+</text>
+
+<rect x="1182" y="527" width="248" height="42" rx="4"
+      fill="rgba(249,115,22,0.13)" stroke="rgba(249,115,22,0.38)" stroke-width="1"/>
+<text x="1306" y="544" text-anchor="middle" fill="#ffedd5" font-size="10" font-weight="600">
+  性能摘要 Dashboard
+</text>
+<text x="1306" y="560" text-anchor="middle" fill="rgba(255,237,213,0.55)" font-size="9">
+  GET /api/metrics/summary → p50/p95/p99
+</text>
+
+<!-- ══ D. 监控指标维度 ══ -->
+<line x1="900" y1="597" x2="1440" y2="597" stroke="rgba(249,115,22,0.12)" stroke-width="1"/>
+
+<rect x="900" y="605" width="540" height="162" rx="6"
+      fill="rgba(249,115,22,0.04)" stroke="rgba(249,115,22,0.20)" stroke-width="1"/>
+<text x="1170" y="624" text-anchor="middle" fill="#fed7aa" font-size="11" font-weight="700">
+  📊 实时监控指标维度
+</text>
+
+<!-- 4 小指标卡 -->
+<rect x="910" y="634" width="120" height="38" rx="4"
+      fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.28)" stroke-width="0.8"/>
+<text x="970" y="649" text-anchor="middle" fill="#fed7aa" font-size="9" font-weight="600">延迟分布</text>
+<text x="970" y="663" text-anchor="middle" fill="rgba(253,215,170,0.55)" font-size="8">p50 · p95 · p99 ms</text>
+
+<rect x="1046" y="634" width="120" height="38" rx="4"
+      fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.28)" stroke-width="0.8"/>
+<text x="1106" y="649" text-anchor="middle" fill="#fed7aa" font-size="9" font-weight="600">Token 消耗</text>
+<text x="1106" y="663" text-anchor="middle" fill="rgba(253,215,170,0.55)" font-size="8">prompt + completion</text>
+
+<rect x="1182" y="634" width="120" height="38" rx="4"
+      fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.28)" stroke-width="0.8"/>
+<text x="1242" y="649" text-anchor="middle" fill="#fed7aa" font-size="9" font-weight="600">错误率</text>
+<text x="1242" y="663" text-anchor="middle" fill="rgba(253,215,170,0.55)" font-size="8">success / fail ratio</text>
+
+<rect x="1318" y="634" width="120" height="38" rx="4"
+      fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.28)" stroke-width="0.8"/>
+<text x="1378" y="649" text-anchor="middle" fill="#fed7aa" font-size="9" font-weight="600">风险分布</text>
+<text x="1378" y="663" text-anchor="middle" fill="rgba(253,215,170,0.55)" font-size="8">critical · high · medium</text>
+
+<!-- 历史评估趋势条 -->
+<rect x="910" y="686" width="528" height="38" rx="4"
+      fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.28)" stroke-width="0.8"/>
+<text x="1174" y="701" text-anchor="middle" fill="#fed7aa" font-size="9" font-weight="600">
+  历史评估趋势  —  eval_runs 表
+</text>
+<text x="1174" y="716" text-anchor="middle" fill="rgba(253,215,170,0.50)" font-size="8">
+  每次 run_full_evaluation() 写入一行，追踪模型 / 知识库迭代效果变化
+</text>
+
+<!-- 脚本调用说明 -->
+<text x="1170" y="752" text-anchor="middle" fill="rgba(249,115,22,0.42)" font-size="9" font-style="italic">
+  python scripts/run_eval.py --dataset data/eval_dataset.json
+</text>
+
+
+<!-- ══════════════════════════════════════════════════
+     连接线：主系统 → 可观测性系统
+══════════════════════════════════════════════════ -->
+
+<!-- 1. Backend → RAGLogger + PerfTracker（橙色虚线，向右上） -->
+<path d="M 775,365 C 820,365 840,186 900,186"
+      stroke="#f97316" stroke-width="1.4" stroke-dasharray="5,3.5"
+      fill="none" marker-end="url(#arr-obs)" opacity="0.75"/>
+<text x="815" y="338" fill="#fb923c" font-size="9"
+      transform="rotate(-25,815,338)">日志 &amp; 性能</text>
+
+<!-- 2. AI/RAG → RAGLogger + PerfTracker（橙色虚线，较浅） -->
+<path d="M 775,536 C 820,536 845,220 900,186"
+      stroke="#f97316" stroke-width="1.1" stroke-dasharray="5,3.5"
+      fill="none" marker-end="url(#arr-obs)" opacity="0.45"/>
+
+<!-- 3. Data → 评估系统（红色虚线） -->
+<path d="M 775,688 C 820,688 845,430 900,415"
+      stroke="#ef4444" stroke-width="1.4" stroke-dasharray="5,3.5"
+      fill="none" marker-end="url(#arr-eval)" opacity="0.70"/>
+<text x="820" y="610" fill="#f87171" font-size="9"
+      transform="rotate(-50,820,610)">评估输入</text>
+
+<!-- 4. Backend → 评估（说明规则引擎也参与评估） -->
+<path d="M 775,400 C 825,400 845,350 900,340"
+      stroke="#ef4444" stroke-width="1.0" stroke-dasharray="4,4"
+      fill="none" marker-end="url(#arr-eval)" opacity="0.35"/>
+
+</svg>
+</body>
+</html>

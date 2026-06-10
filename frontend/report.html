@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>举报入口 · 金融反诈剧场</title>
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <main class="app-shell">
+        <header class="topbar">
+            <div class="brand">举报入口</div>
+            <nav class="nav" aria-label="主导航">
+                <a href="/">首页</a>
+                <a href="/profile.html">学习成长</a>
+            </nav>
+        </header>
+
+        <section>
+            <h1 class="page-title">提交可疑内容</h1>
+            <p class="subtitle">填写聊天内容或链接，系统会保存为反诈分析线索。</p>
+        </section>
+
+        <section class="panel">
+            <form id="reportForm" class="stack">
+                <label>
+                    会话 ID
+                    <input id="sessionId" name="sessionId" autocomplete="off" placeholder="可选">
+                </label>
+                <label>
+                    风险等级
+                    <select id="riskLevel" name="riskLevel">
+                        <option value="">未选择</option>
+                        <option value="critical">critical</option>
+                        <option value="high">high</option>
+                        <option value="medium">medium</option>
+                        <option value="normal">normal</option>
+                        <option value="safe">safe</option>
+                    </select>
+                </label>
+                <label>
+                    可疑链接
+                    <input id="reportUrl" name="reportUrl" inputmode="url" autocomplete="off" placeholder="https://">
+                </label>
+                <label>
+                    可疑话术
+                    <textarea id="reportContent" name="reportContent" placeholder="粘贴对方要求转账、充值、提供验证码等可疑内容"></textarea>
+                </label>
+                <button class="primary" type="submit">提交举报</button>
+                <div id="reportStatus" class="status" role="status"></div>
+            </form>
+        </section>
+    </main>
+
+    <script src="/assets/api.js"></script>
+    <script>
+        const form = document.querySelector("#reportForm");
+        const statusBox = document.querySelector("#reportStatus");
+        const params = new URLSearchParams(window.location.search);
+        const sessionIdInput = document.querySelector("#sessionId");
+        const riskLevelSelect = document.querySelector("#riskLevel");
+        const reportUrlInput = document.querySelector("#reportUrl");
+        const reportContentInput = document.querySelector("#reportContent");
+
+        function applyPrefill() {
+            sessionIdInput.value = params.get("session_id") || "";
+            reportUrlInput.value = params.get("url") || "";
+            reportContentInput.value = params.get("content") || "";
+
+            const riskLevel = params.get("risk_level") || "";
+            if ([...riskLevelSelect.options].some((option) => option.value === riskLevel)) {
+                riskLevelSelect.value = riskLevel;
+            }
+        }
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            statusBox.className = "status";
+            statusBox.textContent = "正在提交...";
+            try {
+                const result = await submitReport({
+                    session_id: sessionIdInput.value.trim() || null,
+                    content: reportContentInput.value,
+                    url: reportUrlInput.value,
+                    risk_level: riskLevelSelect.value || null,
+                });
+                statusBox.className = "status ok";
+                statusBox.textContent = `${result.message} 编号：${result.report_id}`;
+                form.reset();
+            } catch (error) {
+                statusBox.className = "status error";
+                statusBox.textContent = error.message;
+            }
+        });
+
+        applyPrefill();
+    </script>
+</body>
+</html>

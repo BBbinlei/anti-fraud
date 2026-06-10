@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>金融反诈剧场</title>
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <main class="app-shell">
+        <header class="topbar">
+            <div class="brand">金融反诈剧场</div>
+            <nav class="nav" aria-label="主导航">
+                <a href="/report.html">举报入口</a>
+                <a href="/profile.html">学习成长</a>
+            </nav>
+        </header>
+
+        <section>
+            <h1 class="page-title">反诈教育对话系统</h1>
+            <p class="subtitle">选择一个骗局场景，查看开场话术和难度；举报入口与学习成长已接入后端。</p>
+        </section>
+
+        <section class="grid" aria-label="功能入口">
+            <article class="card">
+                <h2>可疑内容举报</h2>
+                <p class="subtitle">提交聊天话术、链接或当前风险等级，进入后端举报记录。</p>
+                <a class="button primary" href="/report.html">打开举报入口</a>
+            </article>
+            <article class="card">
+                <h2>积分与徽章</h2>
+                <p class="subtitle">查看学习积分、连续完成次数、已获得徽章和各骗局场景完成计数。</p>
+                <a class="button primary" href="/profile.html">查看学习成长</a>
+            </article>
+        </section>
+
+        <section class="panel stack" aria-label="剧场场景">
+            <div>
+                <h2>剧场场景</h2>
+                <p id="templateStatus" class="status">正在加载场景...</p>
+            </div>
+            <div id="templateGrid" class="grid"></div>
+        </section>
+    </main>
+
+    <script src="/assets/api.js"></script>
+    <script>
+        const templateStatus = document.querySelector("#templateStatus");
+        const templateGrid = document.querySelector("#templateGrid");
+
+        function renderTemplates(templates) {
+            templateGrid.innerHTML = "";
+            templates.forEach((template) => {
+                const card = document.createElement("article");
+                card.className = "card";
+                const title = document.createElement("h3");
+                const difficulty = document.createElement("p");
+                const opener = document.createElement("p");
+                const steps = document.createElement("p");
+                const flags = document.createElement("div");
+                const prevention = document.createElement("div");
+                const link = document.createElement("a");
+
+                title.textContent = template.scam_name || template.scam_id;
+                difficulty.className = "subtitle";
+                difficulty.textContent = `难度：${template.difficulty} · 目标：${template.target || "在校学生"}`;
+                opener.textContent = template.opener;
+                steps.className = "subtitle";
+                steps.textContent = template.escalation_steps.slice(0, 2).join("；");
+                flags.className = "scenario-list";
+                (template.red_flags || []).forEach((flag) => {
+                    const item = document.createElement("span");
+                    item.className = "scenario";
+                    item.textContent = flag;
+                    flags.appendChild(item);
+                });
+                prevention.className = "subtitle";
+                prevention.textContent = (template.prevention || []).join("；");
+                link.className = "button primary";
+                link.href = `/theater.html?scam_id=${encodeURIComponent(template.scam_id)}`;
+                link.textContent = "进入剧场";
+
+                card.append(title, difficulty, opener, steps, flags, prevention, link);
+                templateGrid.appendChild(card);
+            });
+        }
+
+        async function loadTemplates() {
+            try {
+                const payload = await getTheaterTemplates();
+                renderTemplates(payload.templates);
+                templateStatus.className = "status ok";
+                templateStatus.textContent = `已加载 ${payload.templates.length} 个场景`;
+            } catch (error) {
+                templateStatus.className = "status error";
+                templateStatus.textContent = error.message;
+            }
+        }
+
+        loadTemplates();
+    </script>
+</body>
+</html>

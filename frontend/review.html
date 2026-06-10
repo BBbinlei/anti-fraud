@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>复盘报告 · 金融反诈剧场</title>
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <main class="app-shell">
+        <header class="topbar">
+            <div class="brand">复盘报告</div>
+            <nav class="nav" aria-label="主导航">
+                <a href="/">首页</a>
+                <a href="/theater.html">剧场互动</a>
+                <a href="/profile.html">学习成长</a>
+            </nav>
+        </header>
+
+        <section>
+            <h1 id="reviewTitle" class="page-title">话术揭秘</h1>
+            <p id="reviewStatus" class="subtitle">正在生成复盘报告...</p>
+        </section>
+
+        <section class="metric-row" aria-label="复盘指标">
+            <div class="metric">
+                <span>对话条数</span>
+                <strong id="conversationTurns">0</strong>
+            </div>
+            <div class="metric">
+                <span>最高风险</span>
+                <strong id="highestRiskLevel">normal</strong>
+            </div>
+            <div class="metric">
+                <span>风险分数</span>
+                <strong id="highestRiskScore">0</strong>
+            </div>
+        </section>
+
+        <section class="grid">
+            <article class="panel stack">
+                <h2>复盘摘要</h2>
+                <p id="summary"></p>
+                <h2>关键提醒</h2>
+                <div id="takeaways" class="scenario-list"></div>
+            </article>
+            <article class="panel stack">
+                <h2 id="reviewCardTitle">复盘要点</h2>
+                <p id="reviewCardContent"></p>
+            </article>
+        </section>
+
+        <section class="grid">
+            <article class="panel stack">
+                <h2>诈骗套路</h2>
+                <div id="tactics" class="scenario-list"></div>
+                <h2>危险信号</h2>
+                <div id="redFlags" class="scenario-list"></div>
+            </article>
+        </section>
+
+        <section class="grid">
+            <article class="panel stack">
+                <h2>防范建议</h2>
+                <div id="prevention" class="scenario-list"></div>
+            </article>
+            <article class="panel stack">
+                <h2>法律与案例</h2>
+                <p id="legal"></p>
+                <p id="typicalCase"></p>
+            </article>
+        </section>
+
+        <section class="panel stack">
+            <h2>完成学习</h2>
+            <label>
+                用户 ID
+                <input id="userId" autocomplete="off">
+            </label>
+            <button id="claimProgress" class="primary" type="button">完成学习并领取积分</button>
+            <div id="completeStatus" class="status" role="status"></div>
+        </section>
+    </main>
+
+    <script src="/assets/api.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const scamId = params.get("scam_id") || "shuadan";
+        const sessionId = params.get("session_id") || localStorage.getItem(`anti_fraud_session_${scamId}`) || "";
+        const statusBox = document.querySelector("#reviewStatus");
+        const userIdInput = document.querySelector("#userId");
+        const completeStatus = document.querySelector("#completeStatus");
+        const claimProgress = document.querySelector("#claimProgress");
+        const storedUserId = localStorage.getItem("anti_fraud_user_id") || "demo-student";
+        userIdInput.value = storedUserId;
+
+        function renderList(selector, items) {
+            const container = document.querySelector(selector);
+            container.innerHTML = "";
+            items.forEach((item) => {
+                const node = document.createElement("span");
+                node.className = "scenario";
+                node.textContent = item;
+                container.appendChild(node);
+            });
+        }
+
+        function renderReport(report) {
+            document.querySelector("#reviewTitle").textContent = `${report.scam_name}复盘`;
+            document.querySelector("#conversationTurns").textContent = report.conversation_turns;
+            document.querySelector("#highestRiskLevel").textContent = report.highest_risk_level;
+            document.querySelector("#highestRiskScore").textContent = report.highest_risk_score;
+            document.querySelector("#summary").textContent = report.summary;
+            document.querySelector("#legal").textContent = report.legal;
+            document.querySelector("#typicalCase").textContent = report.typical_case;
+            document.querySelector("#reviewCardTitle").textContent = report.review_title || "复盘要点";
+            document.querySelector("#reviewCardContent").textContent = report.review_content || "暂无补充复盘材料。";
+            renderList("#takeaways", report.key_takeaways);
+            renderList("#tactics", report.tactics);
+            renderList("#redFlags", report.red_flags);
+            renderList("#prevention", report.prevention);
+        }
+
+        async function loadReview() {
+            if (!sessionId) {
+                statusBox.className = "subtitle status error";
+                statusBox.textContent = "缺少 session_id，请先完成一次剧场对话";
+                claimProgress.disabled = true;
+                return;
+            }
+            try {
+                const report = await getReviewReport({ session_id: sessionId, scam_id: scamId });
+                renderReport(report);
+                statusBox.className = "subtitle status ok";
+                statusBox.textContent = "复盘报告已生成";
+            } catch (error) {
+                statusBox.className = "subtitle status error";
+                statusBox.textContent = error.message;
+            }
+        }
+
+        claimProgress.addEventListener("click", async () => {
+            const userId = userIdInput.value.trim();
+            localStorage.setItem("anti_fraud_user_id", userId);
+            claimProgress.disabled = true;
+            completeStatus.className = "status";
+            completeStatus.textContent = "正在更新学习进度...";
+            try {
+                const progress = await completeScenario({ user_id: userId, scam_id: scamId, session_id: sessionId });
+                completeStatus.className = "status ok";
+                completeStatus.textContent = `${progress.message} 本次增加 ${progress.score_added} 分，当前总积分 ${progress.total_score}。`;
+            } catch (error) {
+                claimProgress.disabled = false;
+                completeStatus.className = "status error";
+                completeStatus.textContent = error.message;
+            }
+        });
+
+        loadReview();
+    </script>
+</body>
+</html>

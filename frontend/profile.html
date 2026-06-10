@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>学习成长 · 金融反诈剧场</title>
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <main class="app-shell">
+        <header class="topbar">
+            <div class="brand">学习成长</div>
+            <nav class="nav" aria-label="主导航">
+                <a href="/">首页</a>
+                <a href="/report.html">举报入口</a>
+            </nav>
+        </header>
+
+        <section>
+            <h1 class="page-title">积分与徽章</h1>
+            <p class="subtitle">查看学习进度，记录已完成的反诈场景。</p>
+        </section>
+
+        <section class="panel stack">
+            <label>
+                用户 ID
+                <input id="userId" autocomplete="off" value="demo-student">
+            </label>
+            <div class="nav">
+                <button id="loadProgress" class="primary" type="button">读取进度</button>
+            </div>
+            <div id="profileStatus" class="status" role="status"></div>
+        </section>
+
+        <section class="metric-row" aria-label="学习数据">
+            <div class="metric">
+                <span>总积分</span>
+                <strong id="totalScore">0</strong>
+            </div>
+            <div class="metric">
+                <span>连续完成</span>
+                <strong id="streak">0</strong>
+            </div>
+            <div class="metric">
+                <span>徽章数</span>
+                <strong id="badgeCount">0</strong>
+            </div>
+        </section>
+
+        <section class="grid">
+            <article class="panel">
+                <h2>徽章</h2>
+                <div id="badges" class="badge-list"></div>
+            </article>
+            <article class="panel stack">
+                <h2>完成场景</h2>
+                <label>
+                    场景
+                    <select id="scamId">
+                        <option value="shuadan">刷单返利诈骗</option>
+                        <option value="gongjianfa">冒充公检法诈骗</option>
+                        <option value="touzilicai">虚假投资理财诈骗</option>
+                        <option value="xiaoyuandai">校园贷陷阱</option>
+                        <option value="youxijiaoyi">游戏账号交易诈骗</option>
+                    </select>
+                </label>
+                <button id="completeScenario" class="primary" type="button">标记完成</button>
+                <div id="scenarios" class="scenario-list"></div>
+            </article>
+        </section>
+    </main>
+
+    <script src="/assets/api.js"></script>
+    <script>
+        const userInput = document.querySelector("#userId");
+        const profileStatus = document.querySelector("#profileStatus");
+        const totalScore = document.querySelector("#totalScore");
+        const streak = document.querySelector("#streak");
+        const badgeCount = document.querySelector("#badgeCount");
+        const badges = document.querySelector("#badges");
+        const scenarios = document.querySelector("#scenarios");
+
+        function setStatus(message, ok) {
+            profileStatus.className = ok ? "status ok" : "status error";
+            profileStatus.textContent = message;
+        }
+
+        function renderProgress(progress) {
+            totalScore.textContent = progress.total_score;
+            streak.textContent = progress.streak;
+            badgeCount.textContent = progress.badges.length;
+            badges.innerHTML = "";
+            scenarios.innerHTML = "";
+
+            if (progress.badges.length === 0) {
+                badges.innerHTML = '<span class="scenario">暂无徽章</span>';
+            } else {
+                progress.badges.forEach((badge) => {
+                    const item = document.createElement("span");
+                    item.className = "badge";
+                    item.textContent = badge;
+                    badges.appendChild(item);
+                });
+            }
+
+            const entries = Object.entries(progress.completed);
+            if (entries.length === 0) {
+                scenarios.innerHTML = '<span class="scenario">暂无记录</span>';
+            } else {
+                entries.forEach(([scamId, count]) => {
+                    const item = document.createElement("span");
+                    item.className = "scenario";
+                    item.textContent = `${scamId}：${count}`;
+                    scenarios.appendChild(item);
+                });
+            }
+        }
+
+        async function loadProgress() {
+            try {
+                const progress = await getUserProgress(userInput.value.trim());
+                renderProgress(progress);
+                profileStatus.className = "status ok";
+                profileStatus.textContent = "进度已更新";
+            } catch (error) {
+                setStatus(error.message, false);
+            }
+        }
+
+        document.querySelector("#loadProgress").addEventListener("click", loadProgress);
+        document.querySelector("#completeScenario").addEventListener("click", async () => {
+            try {
+                const progress = await completeScenario({
+                    user_id: userInput.value.trim(),
+                    scam_id: document.querySelector("#scamId").value,
+                });
+                renderProgress(progress);
+                setStatus(progress.message, true);
+            } catch (error) {
+                setStatus(error.message, false);
+            }
+        });
+
+        loadProgress();
+    </script>
+</body>
+</html>

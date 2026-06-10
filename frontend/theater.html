@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>剧场互动 · 金融反诈剧场</title>
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <main class="app-shell">
+        <header class="topbar">
+            <div class="brand">剧场互动</div>
+            <nav class="nav" aria-label="主导航">
+                <a href="/">首页</a>
+                <a href="/report.html">举报入口</a>
+                <a href="/profile.html">学习成长</a>
+            </nav>
+        </header>
+
+        <section>
+            <h1 id="scenarioTitle" class="page-title">剧场对话</h1>
+            <p id="scenarioMeta" class="subtitle">正在加载场景...</p>
+        </section>
+
+        <section class="grid">
+            <article class="panel stack">
+                <h2>对话</h2>
+                <div id="chatLog" class="chat-log" aria-live="polite"></div>
+                <form id="chatForm" class="stack">
+                    <label>
+                        你的回复
+                        <textarea id="messageInput" placeholder="输入你会怎样回应对方"></textarea>
+                    </label>
+                    <button id="sendButton" class="primary" type="submit">发送</button>
+                </form>
+                <div id="chatStatus" class="status" role="status"></div>
+            </article>
+
+            <aside class="panel stack">
+                <h2>风险监测</h2>
+                <div class="metric">
+                    <span>风险等级</span>
+                    <strong id="riskLevel">normal</strong>
+                </div>
+                <div class="metric">
+                    <span>风险分数</span>
+                    <strong id="riskScore">20</strong>
+                </div>
+                <div id="riskMessage" class="status">暂未发现明显风险，请继续保持警惕。</div>
+                <a id="reportCurrent" class="button" href="/report.html">举报当前内容</a>
+                <a id="reviewCurrent" class="button primary" href="/review.html">查看复盘</a>
+            </aside>
+        </section>
+    </main>
+
+    <script src="/assets/api.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const scamId = params.get("scam_id") || "shuadan";
+        const sessionStorageKey = `anti_fraud_session_${scamId}`;
+        const sessionId = localStorage.getItem(sessionStorageKey) || crypto.randomUUID();
+        localStorage.setItem(sessionStorageKey, sessionId);
+
+        const chatLog = document.querySelector("#chatLog");
+        const chatForm = document.querySelector("#chatForm");
+        const messageInput = document.querySelector("#messageInput");
+        const sendButton = document.querySelector("#sendButton");
+        const chatStatus = document.querySelector("#chatStatus");
+        const riskLevel = document.querySelector("#riskLevel");
+        const riskScore = document.querySelector("#riskScore");
+        const riskMessage = document.querySelector("#riskMessage");
+        const scenarioTitle = document.querySelector("#scenarioTitle");
+        const scenarioMeta = document.querySelector("#scenarioMeta");
+        const reportCurrent = document.querySelector("#reportCurrent");
+        const reviewCurrent = document.querySelector("#reviewCurrent");
+        const history = [];
+        let lastUserMessage = "";
+
+        reviewCurrent.href = `/review.html?session_id=${encodeURIComponent(sessionId)}&scam_id=${encodeURIComponent(scamId)}`;
+
+        function appendMessage(role, content) {
+            const row = document.createElement("div");
+            const speaker = document.createElement("strong");
+            const body = document.createElement("p");
+            row.className = `chat-message ${role}`;
+            speaker.textContent = role === "user" ? "你" : "对方";
+            body.textContent = content;
+            row.append(speaker, body);
+            chatLog.appendChild(row);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function updateRisk(result) {
+            riskLevel.textContent = result.risk_level;
+            riskScore.textContent = result.risk_score;
+            riskMessage.className = `status ${result.interrupted ? "error" : "ok"}`;
+            riskMessage.textContent = result.risk_message;
+            const reportParams = new URLSearchParams({
+                session_id: sessionId,
+                risk_level: result.risk_level,
+                content: lastUserMessage,
+            });
+            reportCurrent.href = `/report.html?${reportParams.toString()}`;
+        }
+
+        async function loadScenario() {
+            try {
+                const payload = await getTheaterTemplates();
+                const template = payload.templates.find((item) => item.scam_id === scamId) || payload.templates[0];
+                if (!template) {
+                    throw new Error("暂无可用剧场场景");
+                }
+                scenarioTitle.textContent = template.scam_name || template.scam_id;
+                scenarioMeta.textContent = `难度：${template.difficulty} · 目标：${template.target || "在校学生"} · ${template.persona}`;
+                appendMessage("assistant", template.opener);
+                history.push({ role: "assistant", content: template.opener });
+                chatStatus.className = "status ok";
+                chatStatus.textContent = "场景已加载";
+            } catch (error) {
+                chatStatus.className = "status error";
+                chatStatus.textContent = error.message;
+            }
+        }
+
+        chatForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const message = messageInput.value.trim();
+            if (!message) {
+                chatStatus.className = "status error";
+                chatStatus.textContent = "请输入回复内容";
+                return;
+            }
+
+            appendMessage("user", message);
+            history.push({ role: "user", content: message });
+            lastUserMessage = message;
+            messageInput.value = "";
+            sendButton.disabled = true;
+            chatStatus.className = "status";
+            chatStatus.textContent = "正在分析风险...";
+
+            try {
+                const result = await sendTheaterMessage({
+                    session_id: sessionId,
+                    message,
+                    history,
+                    scam_id: scamId,
+                });
+                updateRisk(result);
+                if (result.scammer_reply) {
+                    appendMessage("assistant", result.scammer_reply);
+                    history.push({ role: "assistant", content: result.scammer_reply });
+                }
+                chatStatus.className = result.interrupted ? "status error" : "status ok";
+                chatStatus.textContent = result.interrupted ? "已触发高危中断" : "已完成风险分析";
+            } catch (error) {
+                chatStatus.className = "status error";
+                chatStatus.textContent = error.message;
+            } finally {
+                sendButton.disabled = false;
+            }
+        });
+
+        loadScenario();
+    </script>
+</body>
+</html>

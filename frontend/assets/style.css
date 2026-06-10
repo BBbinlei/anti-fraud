@@ -1,0 +1,263 @@
+:root {
+    color-scheme: dark;
+    --bg: #060d1a;
+    --panel: #0f1b2d;
+    --panel-strong: #13243a;
+    --line: rgba(255, 255, 255, 0.14);
+    --text: #eef6ff;
+    --muted: #93a8c2;
+    --accent: #00dfff;
+    --danger: #ff3a4e;
+    --warn: #ffa502;
+    --safe: #2ed573;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+a {
+    color: inherit;
+}
+
+.app-shell {
+    width: min(1080px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 28px 0 48px;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 24px;
+}
+
+.brand {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.nav a,
+.button,
+button {
+    border: 1px solid var(--line);
+    background: var(--panel-strong);
+    color: var(--text);
+    min-height: 40px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button.primary,
+button.primary {
+    border-color: rgba(0, 223, 255, 0.55);
+    background: #073247;
+    color: #dffbff;
+}
+
+.page-title {
+    margin: 0 0 8px;
+    font-size: 30px;
+    line-height: 1.25;
+}
+
+.subtitle {
+    margin: 0 0 24px;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.panel,
+.card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: 18px;
+}
+
+.panel h2,
+.card h2,
+.card h3 {
+    margin: 0 0 12px;
+    font-size: 18px;
+}
+
+.stack {
+    display: grid;
+    gap: 14px;
+}
+
+label {
+    display: grid;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #081321;
+    color: var(--text);
+    font: inherit;
+    padding: 11px 12px;
+}
+
+textarea {
+    min-height: 160px;
+    resize: vertical;
+}
+
+.status {
+    min-height: 24px;
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.status.ok {
+    color: var(--safe);
+}
+
+.status.error {
+    color: var(--danger);
+}
+
+.metric-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.metric {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+    background: #081321;
+}
+
+.metric span {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.metric strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 24px;
+}
+
+.badge-list,
+.scenario-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-height: 32px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    border: 1px solid rgba(0, 223, 255, 0.38);
+    border-radius: 8px;
+    background: #09283a;
+    color: #dffbff;
+    padding: 5px 10px;
+    font-size: 13px;
+}
+
+.scenario {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #081321;
+    color: var(--muted);
+}
+
+.chat-log {
+    display: grid;
+    gap: 12px;
+    min-height: 320px;
+    max-height: 520px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #081321;
+    padding: 14px;
+}
+
+.chat-message {
+    max-width: 88%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: var(--panel-strong);
+}
+
+.chat-message.user {
+    justify-self: end;
+    border-color: rgba(0, 223, 255, 0.34);
+}
+
+.chat-message.assistant {
+    justify-self: start;
+}
+
+.chat-message strong {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--accent);
+    font-size: 13px;
+}
+
+.chat-message p {
+    margin: 0;
+    line-height: 1.65;
+}
+
+@media (max-width: 720px) {
+    .app-shell {
+        width: min(100% - 24px, 1080px);
+        padding-top: 18px;
+    }
+
+    .topbar,
+    .grid,
+    .metric-row {
+        grid-template-columns: 1fr;
+        display: grid;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+}
