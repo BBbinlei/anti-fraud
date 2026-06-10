@@ -2,8 +2,16 @@ fastapi>=0.115,<1
 uvicorn[standard]>=0.34,<1
 pydantic>=2,<3
 openai>=1.0,<2
-arize-phoenix>=8,<9
+# arize-phoenix 8.x 在 Python 3.13 上有 MRO bug 无法 import；12.35.x 是兼容 3.13
+# 且不强制 openai>=2 / pydantic-ai 的最高版本（13.x+ 会拉起 openai 2.x，破坏 openai<2）。
+arize-phoenix>=12.35,<13
+# evals 3.x 删掉了 phoenix.evals.models，会让 phoenix import 崩；锁在 2.x。
+arize-phoenix-evals>=2.12,<3
+# graphql-core 3.3 alpha 会破坏 phoenix 锁定的 strawberry 0.287.3；锁在 3.2 稳定线。
+graphql-core>=3.2,<3.3
 openinference-instrumentation-openai>=0.1,<1
+pytz>=2024.1
+python-dotenv>=1,<2
 chromadb>=0.5,<1
 sentence-transformers>=3,<4
 deepeval>=2,<3

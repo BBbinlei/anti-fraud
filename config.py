@@ -8,7 +8,17 @@ from pathlib import Path
 
 # ── 路径 ──────────────────────────────────────────────────────
 BASE_DIR  = Path(__file__).parent
+ENV_FILE  = BASE_DIR / ".env"
 DATA_DIR  = BASE_DIR / "data"
+
+# 在读取任何环境变量前加载 .env。守护式 import：config 被所有模块导入，
+# 即使缺少 python-dotenv 也不能让基础配置模块崩溃。
+# override=False → 真实 shell 环境变量优先于 .env 文件。
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ENV_FILE)
+except ImportError:
+    pass
 RISK_RULES_FILE = DATA_DIR / "risk_rules.json"
 SCRIPT_TEMPLATES_FILE = DATA_DIR / "script_templates.json"
 SCAM_CARDS_FILE = DATA_DIR / "scam_cards.json"

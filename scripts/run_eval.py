@@ -71,10 +71,10 @@ def run_evaluation(deepeval_bundle: dict[str, Any] | None = None):
     if not cases:
         raise RuntimeError(DEEPEVAL_NO_CASES_MESSAGE)
 
-    judge = bundle["OpenAIModel"](
+    judge = bundle["GPTModel"](
         model=LLM_MODEL,
         base_url=DEEPSEEK_BASE_URL,
-        api_key=DEEPSEEK_API_KEY,
+        _openai_api_key=DEEPSEEK_API_KEY,
     )
     metrics = [
         bundle["FaithfulnessMetric"](threshold=DEEPEVAL_METRIC_THRESHOLD, model=judge),
@@ -95,7 +95,7 @@ def _load_deepeval() -> dict[str, Any]:
             ContextualRecallMetric,
             FaithfulnessMetric,
         )
-        from deepeval.models import OpenAIModel
+        from deepeval.models import GPTModel
         from deepeval.test_case import LLMTestCase
     except ImportError as exc:
         raise RuntimeError(DEEPEVAL_DEPENDENCY_ERROR_MESSAGE) from exc
@@ -107,7 +107,7 @@ def _load_deepeval() -> dict[str, Any]:
         "ContextualPrecisionMetric": ContextualPrecisionMetric,
         "ContextualRecallMetric": ContextualRecallMetric,
         "LLMTestCase": LLMTestCase,
-        "OpenAIModel": OpenAIModel,
+        "GPTModel": GPTModel,
     }
 
 

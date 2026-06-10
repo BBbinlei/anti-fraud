@@ -13,10 +13,10 @@ class FakeMetric:
 
 
 class FakeModel:
-    def __init__(self, model, base_url, api_key):
+    def __init__(self, model, base_url, _openai_api_key):
         self.model = model
         self.base_url = base_url
-        self.api_key = api_key
+        self._openai_api_key = _openai_api_key
 
 
 class FakeLLMTestCase:
@@ -37,7 +37,7 @@ def _fake_bundle(captured):
         "ContextualPrecisionMetric": FakeMetric,
         "ContextualRecallMetric": FakeMetric,
         "LLMTestCase": FakeLLMTestCase,
-        "OpenAIModel": FakeModel,
+        "GPTModel": FakeModel,
     }
 
 
